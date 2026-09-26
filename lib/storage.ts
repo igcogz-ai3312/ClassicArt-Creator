@@ -1,6 +1,10 @@
 export interface ObjectBucket {
   put(key: string, value: ReadableStream | ArrayBuffer | ArrayBufferView | string, options?: { httpMetadata?: { contentType?: string } }): Promise<unknown>;
-  get(key: string): Promise<unknown | null>;
+  get(key: string): Promise<{
+    body: ReadableStream<Uint8Array>;
+    httpMetadata?: { contentType?: string };
+    size?: number;
+  } | null>;
   delete(key: string): Promise<void>;
 }
 

@@ -1,49 +1,55 @@
 # ClassicArt Creator
 
-Estudio creativo para preparar imágenes, video, personajes y voz desde una sola interfaz.
+Estudio web en español para crear imágenes, animar imágenes como video, diseñar personajes, clonar voces con autorización, sintetizar diálogo y sincronizar labios.
 
-## Estado
+## Funciones implementadas
 
-La primera entrega contiene la interfaz del estudio, validación de solicitudes, puntos de integración de proveedores, modelo de datos inicial y soporte declarado para D1 y R2. La creación real de contenido y la sincronización de voz quedan desactivadas hasta configurar proveedores y credenciales. La aplicación lo informa en pantalla y no sustituye resultados falsos por generaciones reales.
+- Generación de imágenes y edición guiada por imagen de referencia mediante fal.ai.
+- Video desde texto e imagen mediante modelos Seedance de fal.ai.
+- Seguimiento asíncrono de trabajos, control de estado y descarga del resultado.
+- Síntesis de voz y clonación de voz mediante ElevenLabs, con confirmación explícita de consentimiento.
+- Sincronización de labios mediante fal.ai, con consentimiento requerido.
+- Persistencia de historial y metadatos en Cloudflare D1, y archivos en R2.
+- Biblioteca privada por propietario para resultados, personajes, proyectos y voces.
+- Respuestas de API y validación de archivos con límites de tipo y tamaño.
+
+La aplicación y las integraciones están implementadas. La generación real requiere credenciales activas en fal.ai y ElevenLabs; la persistencia requiere los bindings D1 (`DB`) y R2 (`MEDIA`); el uso desplegado requiere la capa de identidad configurada por el alojamiento. No se simulan resultados cuando falta una dependencia.
 
 ## Entorno local
 
 - Node.js 22.13 o posterior
 - pnpm 11.25.0
-- Copia `.env.example` a `.env` para configurar proveedores en local. No subas credenciales al repositorio.
-
-Comandos principales:
+- Copia `.env.example` a `.env` y configura las claves localmente. No envíes claves por chat ni las publiques en GitHub.
 
 ```sh
 pnpm install --frozen-lockfile
 pnpm dev
 pnpm test
 pnpm typecheck
-pnpm db:generate
 pnpm build
 ```
 
-## Integraciones
+Las migraciones de D1 están en `drizzle/`. Antes de desplegar, aplícalas en el entorno correspondiente y vincula los bindings `DB` y `MEDIA`.
 
-Configura URL y clave privada para cada proveedor:
+## Variables privadas
 
-- `IMAGE_PROVIDER_BASE_URL` y `IMAGE_PROVIDER_API_KEY`
-- `VIDEO_PROVIDER_BASE_URL` y `VIDEO_PROVIDER_API_KEY`
-- `VOICE_PROVIDER_BASE_URL` y `VOICE_PROVIDER_API_KEY`
+```dotenv
+FAL_KEY=
+FAL_IMAGE_MODEL=fal-ai/nano-banana-2
+FAL_IMAGE_EDIT_MODEL=fal-ai/nano-banana-2/edit
+FAL_VIDEO_MODEL=bytedance/seedance-2.0/fast/text-to-video
+FAL_VIDEO_IMAGE_MODEL=bytedance/seedance-2.0/fast/image-to-video
+FAL_LIPSYNC_MODEL=fal-ai/sync-lipsync/v2
+ELEVENLABS_API_KEY=
+ELEVENLABS_DEFAULT_VOICE_ID=
+```
 
-El proyecto separa los contratos de generación de la aplicación. Así se pueden integrar proveedores distintos por modalidad sin exponer credenciales al navegador.
+Configura estos valores como secretos del alojamiento en producción. El navegador no recibe las claves de proveedor.
 
-## Datos y archivos
+## Seguridad y límites
 
-- D1 (`DB`) conserva proyectos, personajes, historial de generación y perfiles de voz.
-- R2 (`MEDIA`) conserva archivos de imagen, video y audio; D1 guarda sus metadatos.
-- Antes de ofrecer datos persistentes a varios usuarios, falta incorporar autenticación, autorización por propietario, carga segura y política de retención.
-- La clonación o reproducción de una voz requiere consentimiento verificable de la persona titular antes de activar esa integración.
-
-## Próximos pasos
-
-1. Elegir proveedor para imagen, video y voz.
-2. Configurar credenciales privadas y vincular D1/R2.
-3. Completar autenticación, carga segura y control de acceso.
-4. Conectar la generación asíncrona, revisión de resultados, exportación y sincronización de labios.
-5. Validar con cuentas de prueba y límites de uso antes de abrir a usuarios.
+- Los endpoints autenticados asocian generaciones, voces y archivos al propietario.
+- En despliegue, las rutas fallan de forma cerrada si no reciben identidad del host. La vista previa local usa una identidad local de desarrollo.
+- Clonar voz y sincronizar rostro requieren aceptación explícita de autorización.
+- Los archivos de referencia y resultados tienen límites de tamaño; el almacenamiento requiere D1 y R2 disponibles.
+- Los proveedores pueden cobrar por solicitud. Las pruebas automáticas usan respuestas simuladas y no llaman a servicios de pago.
