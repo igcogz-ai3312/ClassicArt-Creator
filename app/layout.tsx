@@ -4,9 +4,6 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "ClassicArt Creator — Estudio creativo",
   description: "Crea imágenes, videos, personajes y voces desde un mismo estudio creativo.",
-  other: {
-    "codex-preview": "development",
-  },
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",
